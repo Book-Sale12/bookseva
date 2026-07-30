@@ -34,7 +34,8 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest request, HttpServletResponse httpServletResponse) {
+    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest request,
+            HttpServletResponse httpServletResponse) {
         AuthResponse response = authService.verifyOtp(request);
         setRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.ok(Map.of("success", true, "data", response));
@@ -56,7 +57,8 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody com.bookseva.auth.dto.ForgotPasswordRequest request) {
         authService.forgotPassword(request);
-        return ResponseEntity.ok(Map.of("success", true, "message", "If your email is registered, you will receive a reset OTP shortly."));
+        return ResponseEntity.ok(Map.of("success", true, "message",
+                "If your email is registered, you will receive a reset OTP shortly."));
     }
 
     @PostMapping("/reset-password")
@@ -66,7 +68,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken, HttpServletResponse httpServletResponse) {
+    public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse httpServletResponse) {
         AuthResponse response = authService.refreshToken(refreshToken);
         setRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.ok(Map.of("success", true, "data", response));
