@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #aa3bff;
+  --color-background: #ffffff;
+  --color-background-dark: #16171d;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Outfit', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-slate-800 antialiased font-sans transition-colors duration-300;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    body {
+      @apply bg-slate-900 text-slate-200;
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-medium tracking-tight;
+  }
+}

@@ -1,0 +1,102 @@
+# spring:
+#   application:
+#     name: bookseva-backend
+  
+#   datasource:
+#     url: ${DB_URL}
+#     username: ${DB_USERNAME}
+#     password: ${DB_PASSWORD}
+#     driver-class-name: com.mysql.cj.jdbc.Driver
+
+#   jpa:
+#     hibernate:
+#       ddl-auto: update
+#     show-sql: true
+#     properties:
+#       hibernate:
+#         format_sql: true
+#         dialect: org.hibernate.dialect.MySQLDialect
+
+#   mail:
+#     host: ${MAIL_HOST}
+#     port: ${MAIL_PORT}
+#     username: ${MAIL_USERNAME}
+#     password: ${MAIL_PASSWORD}
+#     properties:
+#       mail:
+#         smtp:
+#           auth: true
+#           starttls:
+#             enable: true
+
+# jwt:
+#   secret: ${JWT_SECRET}
+#   access-expiry: ${JWT_ACCESS_EXPIRY}
+#   refresh-expiry: ${JWT_REFRESH_EXPIRY}
+
+# cloudinary:
+#   cloud-name: ${CLOUDINARY_CLOUD_NAME}
+#   api-key: ${CLOUDINARY_API_KEY}
+#   api-secret: ${CLOUDINARY_API_SECRET}
+
+# razorpay:
+#   key-id: ${RAZORPAY_KEY_ID}
+#   key-secret: ${RAZORPAY_KEY_SECRET}
+
+# app:
+#   frontend-origin: ${FRONTEND_ORIGIN}
+#   allowed-email-domains: ${ALLOWED_EMAIL_DOMAINS}
+#   platform-fee-percent: ${PLATFORM_FEE_PERCENT}
+#   admin-seed-email: ${ADMIN_SEED_EMAIL}
+#   admin-seed-password: ${ADMIN_SEED_PASSWORD}
+spring:
+  application:
+    name: bookseva-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bookseva
+    username: root
+    password: Shubham@123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: bookseva123@gmail.com
+    password: mrfiexlrvfehxuna
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  secret: df056aaee4f82877a5ef046522cbb54d24268e37d896ecbb6ed61f528cb617cf
+  access-expiry: 900000
+  refresh-expiry: 604800000
+
+cloudinary:
+  cloud-name: bqyjlqgk
+  api-key: 982645563588413
+  api-secret: h8LL0xNOGXZ8bHLB7pic5lhxIoE
+
+razorpay:
+  key-id: rzp_test_THh7FJIpQR2ln0
+  key-secret: 4gEOhcsdeWlYfrg7DKvF9qB1
+
+app:
+  frontend-origin: http://localhost:5173
+  allowed-email-domains: ""
+  platform-fee-percent: 0
+  admin-seed-email: bookseva123@gmail.com
+  admin-seed-password: bookseva
