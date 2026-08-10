@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { BookText, ShoppingCart, ArrowLeft, MapPin, ShieldCheck, Tag, MessageSquare, Edit, Flag, ArrowRight } from 'lucide-react';
 import ChatBox from '../components/ChatBox';
 import ReportModal from '../components/ReportModal';
+import StarRating from '../components/StarRating';
 
 const fetchBook = async (id) => {
   const res = await api.get(`/books/${id}`);
@@ -16,6 +18,7 @@ const BookDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [activeImage, setActiveImage] = useState(0);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -46,6 +49,15 @@ const BookDetails = () => {
     enabled: isAuthenticated,
   });
 
+  const { data: sellerProfile } = useQuery({
+    queryKey: ['sellerProfile', data?.data?.seller?.id],
+    queryFn: async () => {
+      const res = await api.get(`/sellers/${data.data.seller.id}`);
+      return res.data.data;
+    },
+    enabled: !!data?.data?.seller?.id,
+  });
+
   const isInCart = (bookId) => {
     return cart?.items?.some(item => item.book.id === bookId);
   };
@@ -58,14 +70,14 @@ const BookDetails = () => {
   });
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">{t('bookDetails.loading')}</div>;
   }
 
   if (error || !data?.data) {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col gap-4">
-        <p className="text-red-500">Failed to load book details.</p>
-        <Link to="/" className="text-primary hover:underline">Return Home</Link>
+        <p className="text-red-500">{t('bookDetails.failedToLoad')}</p>
+        <Link to="/" className="text-primary hover:underline">{t('bookDetails.returnHome')}</Link>
       </div>
     );
   }
@@ -187,20 +199,38 @@ const BookDetails = () => {
               <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
                 <h3 className="font-heading font-semibold text-lg text-slate-900 dark:text-white mb-4">Seller Info</h3>
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
-                    {book.seller.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
-                      {book.seller.name}
-                      {book.seller.trustScore > 90 && (
-                        <ShieldCheck className="h-4 w-4 text-green-500" title="Highly Trusted" />
+                  <Link to={`/seller/${book.seller.id}`} className="flex items-center gap-4 group flex-1">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl group-hover:bg-primary/20 transition-colors">
+                      {book.seller.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white flex items-center gap-2 group-hover:text-primary transition-colors">
+                        {book.seller.name}
+                        {book.seller.trustScore >= 90 && (
+                          <ShieldCheck className="h-4 w-4 text-green-500" title="Highly Trusted" />
+                        )}
+                      </p>
+                      {sellerProfile ? (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {sellerProfile.averageRating ? (
+                            <>
+                              <StarRating rating={sellerProfile.averageRating} size={14} />
+                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {sellerProfile.averageRating.toFixed(1)}
+                              </span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                ({sellerProfile.totalReviews} review{sellerProfile.totalReviews !== 1 ? 's' : ''})
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-slate-500 dark:text-slate-400">No reviews yet</span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-5 w-32 bg-slate-200 dark:bg-slate-700 animate-pulse rounded mt-1"></div>
                       )}
-                    </p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" /> {book.seller.collegeName}
-                    </p>
-                  </div>
+                    </div>
+                  </Link>
                   {!isSeller && (
                     <button 
                       onClick={() => openReportModal('USER', book.seller.id)}
@@ -219,7 +249,7 @@ const BookDetails = () => {
                     }}
                     className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
                   >
-                    <MessageSquare className="h-4 w-4" /> Contact Seller
+                    <MessageSquare className="h-4 w-4" /> {t('bookDetails.contactSeller')}
                   </button>
                 </div>
               </div>
@@ -235,7 +265,7 @@ const BookDetails = () => {
                 </button>
               ) : isSeller ? (
                 <Link to={`/edit-listing/${book.id}`} className="w-full flex items-center justify-center gap-2 py-4 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-700 transition-colors shadow-sm">
-                  <Edit className="h-5 w-5" /> Edit Listing
+                  <Edit className="h-5 w-5" /> {t('bookDetails.editListing')}
                 </Link>
               ) : !isAvailable ? (
                 <button disabled className="w-full py-4 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium rounded-xl cursor-not-allowed">
@@ -246,7 +276,7 @@ const BookDetails = () => {
                   onClick={() => navigate('/cart')}
                   className="w-full flex items-center justify-center gap-2 py-4 bg-green-500 text-white font-medium rounded-xl hover:bg-green-600 transition-colors shadow-sm"
                 >
-                  Go to Cart <ArrowRight className="h-5 w-5" />
+                  {t('home.goToCart')} <ArrowRight className="h-5 w-5" />
                 </button>
               ) : (
                 <button
@@ -255,10 +285,10 @@ const BookDetails = () => {
                   className="w-full flex items-center justify-center gap-2 py-4 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-70"
                 >
                   {addToCartMutation.isPending ? (
-                    'Adding to Cart...'
+                    t('home.adding')
                   ) : (
                     <>
-                      <ShoppingCart className="h-5 w-5" /> Add to Cart
+                      <ShoppingCart className="h-5 w-5" /> {t('bookDetails.addToCart')}
                     </>
                   )}
                 </button>
