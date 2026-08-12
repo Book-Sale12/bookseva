@@ -5,5 +5,5 @@ public enum ConditionTier {
     GOOD,
     FAIR,
     POOR,
-    DONATE
+    //DONATE
 }

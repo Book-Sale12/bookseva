@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { ImagePlus, Info, X } from "lucide-react";
@@ -15,12 +16,18 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 
+const DESCRIPTION_MAX = 150;
+
 const editListingSchema = z.object({
   title: z
     .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(150, "Title cannot exceed 150 characters"),
-  author: z.string().min(2, "Author is required"),
+    .min(2, "Book name must be at least 2 characters")
+    .max(150, "Book name cannot exceed 150 characters")
+    .regex(/^(?!\d+$).+$/, "Book name cannot be purely numeric"),
+  author: z
+    .string()
+    .min(2, "Author name must be at least 2 characters")
+    .regex(/^(?!\d+$).+$/, "Author cannot be purely numeric"),
   isbn: z.string().optional().nullable(),
   category: z.string().min(1, "Category is required"),
   condition: z.string().min(1, "Condition is required"),
@@ -28,8 +35,25 @@ const editListingSchema = z.object({
   price: z.number().min(1, "Price must be greater than 0"),
   description: z
     .string()
-    .min(20, "Description must be at least 20 characters")
-    .max(2000, "Description too long"),
+    .min(10, "Description must be at least 10 characters")
+    .max(DESCRIPTION_MAX, `Description cannot exceed ${DESCRIPTION_MAX} characters`)
+    .superRefine((val, ctx) => {
+      if (/^\d+$/.test(val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Description cannot consist of only numbers." });
+        return;
+      }
+      if (/^[^a-zA-Z0-9\s]+$/.test(val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Description cannot consist of only special characters." });
+        return;
+      }
+      if (/(\d)\1{2,}/.test(val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Description cannot contain repeated digits (e.g., \"111\", \"999\")." });
+        return;
+      }
+      if (/([^a-zA-Z0-9\s])\1{2,}/.test(val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Description cannot contain repeated special characters (e.g., \"...\", \"!!!\")." });
+      }
+    }),
   images: z
     .any()
     .optional()
@@ -51,21 +75,28 @@ const EditListing = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   
   const [existingImages, setExistingImages] = useState([]);
-  const [newImagePreviews, setNewImagePreviews] = useState([]);
+  const [newPhotos, setNewPhotos] = useState([]);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
     watch,
     reset,
+    setValue,
   } = useForm({
     resolver: zodResolver(editListingSchema),
+    mode: "onChange",
   });
+
+  useEffect(() => {
+    register("images");
+  }, [register]);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -105,25 +136,31 @@ const EditListing = () => {
     }
   }, [id, isAuthenticated, reset, navigate, user]);
 
-  const watchImages = watch("images");
-
-  useEffect(() => {
-    if (watchImages && watchImages.length > 0) {
-      const newPreviews = Array.from(watchImages).map((file) =>
-        URL.createObjectURL(file),
-      );
-      setNewImagePreviews(newPreviews);
-
-      return () => {
-        newPreviews.forEach((url) => URL.revokeObjectURL(url));
-      };
-    } else {
-      setNewImagePreviews([]);
+  const handleNewPhotoChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (existingImages.length + newPhotos.length + files.length > 5) {
+      alert("Maximum 5 photos allowed in total.");
+      return;
     }
-  }, [watchImages]);
+    setNewPhotos((prev) => {
+      const updated = [...prev, ...files];
+      setValue("images", updated, { shouldValidate: true });
+      return updated;
+    });
+    e.target.value = null;
+  };
+
+  const removeNewPhoto = (indexToRemove) => {
+    setNewPhotos((prev) => {
+      const updated = prev.filter((_, idx) => idx !== indexToRemove);
+      setValue("images", updated, { shouldValidate: true });
+      return updated;
+    });
+  };
 
   const watchCondition = watch("condition");
   const watchMrp = watch("mrp");
+  const watchDescription = watch("description", "");
 
   const getSuggestedPrice = (condition, mrp) => {
     if (!condition || !mrp) return null;
@@ -132,7 +169,8 @@ const EditListing = () => {
       case "GOOD": return { min: mrp * 0.4, max: mrp * 0.6 };
       case "FAIR": return { min: mrp * 0.2, max: mrp * 0.4 };
       case "POOR": return { min: mrp * 0.05, max: mrp * 0.15 };
-      case "DONATE": return { min: 0, max: 0 };
+      // TODO: Donate feature disabled temporarily - not working, needs fix.
+      // case "DONATE": return { min: 0, max: 0 };
       default: return null;
     }
   };
@@ -147,7 +185,7 @@ const EditListing = () => {
     try {
       setServerError("");
       
-      const totalImages = existingImages.length + (data.images ? data.images.length : 0);
+      const totalImages = existingImages.length + newPhotos.length;
       if (totalImages < 1 || totalImages > 5) {
         setServerError("You must have between 1 and 5 images total.");
         return;
@@ -155,8 +193,8 @@ const EditListing = () => {
 
       const formData = new FormData();
 
-      if (data.images && data.images.length > 0) {
-        Array.from(data.images).forEach((file) => {
+      if (newPhotos.length > 0) {
+        newPhotos.forEach((file) => {
           formData.append("images", file);
         });
       }
@@ -182,6 +220,7 @@ const EditListing = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      queryClient.invalidateQueries({ queryKey: ["book", id] });
       navigate(`/books/${id}`);
     } catch (err) {
       setServerError(
@@ -303,7 +342,6 @@ const EditListing = () => {
                 <option value="GOOD">Good (Minor wear, few highlights)</option>
                 <option value="FAIR">Fair (Visible wear, some torn pages)</option>
                 <option value="POOR">Poor (Heavy damage, for parts)</option>
-                <option value="DONATE">Donate (Free)</option>
               </select>
               {errors.condition && <p className="mt-1 text-sm text-red-500">{errors.condition.message}</p>}
             </div>
@@ -314,9 +352,19 @@ const EditListing = () => {
               <textarea
                 {...register("description")}
                 rows="4"
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-slate-900 dark:text-white focus:ring-primary focus:border-primary resize-none"
+                maxLength={DESCRIPTION_MAX}
+                className={`w-full rounded-lg border bg-white dark:bg-slate-800 px-4 py-2 text-slate-900 dark:text-white focus:ring-primary focus:border-primary resize-none transition-colors ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
               ></textarea>
-              {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>}
+              <div className="flex justify-between items-start mt-1">
+                <div>
+                  {errors.description && (
+                    <p className="text-sm text-red-500">{errors.description.message}</p>
+                  )}
+                </div>
+                <span className={`text-xs tabular-nums shrink-0 ml-2 ${(watchDescription?.length ?? 0) >= DESCRIPTION_MAX ? 'text-red-500 font-semibold' : 'text-slate-400'}`}>
+                  {watchDescription?.length ?? 0}/{DESCRIPTION_MAX}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -398,33 +446,47 @@ const EditListing = () => {
           )}
 
           <div className="mt-4">
-             <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Add New Photos</h3>
-            <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <ImagePlus className="w-8 h-8 text-slate-400 mb-2" />
-                  <p className="mb-1 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold">Click to add new images</span>
-                  </p>
+            {existingImages.length + newPhotos.length < 5 && (
+              <>
+                <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Add New Photos</h3>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <ImagePlus className="w-8 h-8 text-slate-400 mb-2" />
+                      <p className="mb-1 text-sm text-slate-500 dark:text-slate-400">
+                        <span className="font-semibold">Click to add new images</span>
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleNewPhotoChange}
+                    />
+                  </label>
                 </div>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  {...register("images")}
-                />
-              </label>
-            </div>
+              </>
+            )}
+            {existingImages.length + newPhotos.length >= 5 && (
+               <p className="text-sm text-amber-500 font-medium mt-2">Maximum 5 photos allowed.</p>
+            )}
             {errors.images && <p className="mt-2 text-sm text-red-500">{errors.images.message}</p>}
           </div>
 
-          {newImagePreviews.length > 0 && (
+          {newPhotos.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4">
-              {newImagePreviews.map((url, i) => (
-                <div key={`new-${i}`} className="relative aspect-square rounded-xl overflow-hidden border border-blue-200 shadow-sm">
-                  <img src={url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+              {newPhotos.map((file, i) => (
+                <div key={`new-${i}`} className="relative aspect-square rounded-xl overflow-hidden border border-blue-200 shadow-sm group">
+                  <img src={URL.createObjectURL(file)} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 bg-blue-500/80 text-white text-xs text-center py-1">New</div>
+                  <button
+                    type="button"
+                    onClick={() => removeNewPhoto(i)}
+                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -434,7 +496,7 @@ const EditListing = () => {
         <div className="pt-6">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isValid || (existingImages.length + newPhotos.length === 0)}
             className="w-full py-4 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-70 text-lg"
           >
             {isSubmitting ? "Saving Changes..." : "Save Changes"}
