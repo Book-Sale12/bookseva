@@ -23,6 +23,7 @@ public class ReviewService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public ReviewResponse addReview(ReviewRequest request, String reviewerEmail) {
         User reviewer = userRepository.findByEmail(reviewerEmail)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
