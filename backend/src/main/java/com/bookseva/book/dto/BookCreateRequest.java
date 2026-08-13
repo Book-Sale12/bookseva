@@ -6,10 +6,21 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+<<<<<<< HEAD
+import java.util.List;
+=======
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 
 @Data
 public class BookCreateRequest {
 
+<<<<<<< HEAD
+    @NotBlank
+    @Size(min = 3, max = 150)
+    private String title;
+
+    @NotBlank
+=======
     @NotBlank(message = "Book name must not be empty")
     @Size(min = 2, max = 150, message = "Book name must be between 2 and 150 characters")
     @Pattern(
@@ -24,10 +35,32 @@ public class BookCreateRequest {
         regexp = "^(?!\\d+$).+$",
         message = "Author cannot be purely numeric"
     )
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     private String author;
 
     private String isbn;
 
+<<<<<<< HEAD
+    @NotNull
+    private Category category;
+
+    @NotNull
+    private ConditionTier condition;
+
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = false)
+    private BigDecimal mrp;
+
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = false)
+    private BigDecimal price;
+
+    @NotBlank
+    @Size(min = 20, max = 2000)
+    private String description;
+
+    @Min(1)
+=======
     @NotNull(message = "Category is required")
     private Category category;
 
@@ -57,5 +90,6 @@ public class BookCreateRequest {
 
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     private Integer quantity = 1;
 }

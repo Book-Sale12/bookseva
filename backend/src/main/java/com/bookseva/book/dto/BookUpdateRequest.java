@@ -2,7 +2,16 @@ package com.bookseva.book.dto;
 
 import com.bookseva.book.Category;
 import com.bookseva.book.ConditionTier;
+<<<<<<< HEAD
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Positive;
+=======
 import jakarta.validation.constraints.*;
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,6 +20,13 @@ import java.util.List;
 @Data
 public class BookUpdateRequest {
 
+<<<<<<< HEAD
+    @NotBlank(message = "Title is required")
+    @Size(min = 3, max = 150)
+    private String title;
+
+    @NotBlank(message = "Author is required")
+=======
     @NotBlank(message = "Book name must not be empty")
     @Size(min = 2, max = 150, message = "Book name must be between 2 and 150 characters")
     @Pattern(
@@ -25,10 +41,15 @@ public class BookUpdateRequest {
         regexp = "^(?!\\d+$).+$",
         message = "Author cannot be purely numeric"
     )
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     private String author;
 
     private String isbn;
 
+<<<<<<< HEAD
+    @NotBlank(message = "Description is required")
+    @Size(min = 20, max = 2000)
+=======
     @NotBlank(message = "Description must not be empty")
     @Size(min = 10, max = 150, message = "Description must be between 10 and 150 characters")
     @Pattern(
@@ -40,6 +61,7 @@ public class BookUpdateRequest {
         regexp = "^(?!\\d+$)(?![^a-zA-Z0-9]+$)(?!.*(\\d)\\1{2,})(?!.*([^a-zA-Z0-9\\s])\\2{2,})[\\s\\S]+$",
         message = "Description cannot contain repeated numbers or special characters"
     )
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     private String description;
 
     @NotNull(message = "Category is required")
@@ -49,7 +71,11 @@ public class BookUpdateRequest {
     private ConditionTier condition;
 
     @NotNull(message = "MRP is required")
+<<<<<<< HEAD
+    @DecimalMin(value = "0.0", inclusive = false, message = "MRP must be > 0")
+=======
     @DecimalMin(value = "0.0", inclusive = false, message = "MRP must be greater than 0")
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     private BigDecimal mrp;
 
     @NotNull(message = "Price is required")

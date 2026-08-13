@@ -3,14 +3,20 @@ package com.bookseva.book.service;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
+<<<<<<< HEAD
+=======
 import lombok.extern.slf4j.Slf4j;
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
 
+<<<<<<< HEAD
+=======
 @Slf4j
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 @Service
 @RequiredArgsConstructor
 public class CloudinaryService {
@@ -26,6 +32,8 @@ public class CloudinaryService {
         Map uploadResult = cloudinary.uploader().upload(data, ObjectUtils.asMap("resource_type", "image", "public_id", filename));
         return uploadResult.get("secure_url").toString();
     }
+<<<<<<< HEAD
+=======
 
     /**
      * Deletes an image from Cloudinary by its secure URL.
@@ -43,4 +51,5 @@ public class CloudinaryService {
         cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
         log.debug("Deleted Cloudinary image with publicId={}", publicId);
     }
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 }
