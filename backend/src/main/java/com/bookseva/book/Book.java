@@ -20,7 +20,11 @@ public class Book  {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+<<<<<<< HEAD
+    @ManyToOne(fetch = FetchType.EAGER)
+=======
     @ManyToOne(fetch = FetchType.LAZY)
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 

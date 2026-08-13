@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+=======
 import { useTranslation } from 'react-i18next';
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingCart, Trash2, ShieldCheck, ArrowRight, BookText } from 'lucide-react';
@@ -12,8 +15,12 @@ const fetchCart = async () => {
 };
 
 const Cart = () => {
+<<<<<<< HEAD
+  const { isAuthenticated } = useAuth();
+=======
   const { isAuthenticated, user } = useAuth();
   const { t } = useTranslation();
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -36,7 +43,11 @@ const Cart = () => {
     onSuccess: (res) => {
       const payments = res.data.data;
       if (payments && payments.length > 0) {
+<<<<<<< HEAD
+        initiateRazorpay(payments[0]); // For MVP, assuming single item checkout or batched gateway order
+=======
         initiateRazorpay(payments);
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       } else {
         alert('Order placed successfully (No payment required).');
         queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -60,6 +71,16 @@ const Cart = () => {
     }
   });
 
+<<<<<<< HEAD
+  const initiateRazorpay = (payment) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Use the public key from env
+      amount: payment.amount * 100, // Amount in paise
+      currency: "INR",
+      name: "BookSeva",
+      description: "Book Purchase",
+      order_id: payment.gatewayOrderId, // The Razorpay order ID returned from backend
+=======
   const initiateRazorpay = (payments) => {
     const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
     const gatewayOrderId = payments[0].gatewayOrderId;
@@ -71,6 +92,7 @@ const Cart = () => {
       name: "BookSeva",
       description: "Cart Checkout",
       order_id: gatewayOrderId, // The Razorpay order ID returned from backend
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       handler: async function (response) {
         try {
           setIsProcessing(true);
@@ -89,20 +111,32 @@ const Cart = () => {
         }
       },
       prefill: {
+<<<<<<< HEAD
+        name: "Test User",
+        email: "test@example.com",
+        contact: "9999999999"
+=======
         name: user?.name || "",
         email: user?.email || "",
         contact: user?.phone || ""
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       },
       theme: {
         color: "#aa3bff" // Primary color
       },
       modal: {
         ondismiss: function() {
+<<<<<<< HEAD
+          if (payment.order && payment.order.id) {
+            cancelOrderMutation.mutate(payment.order.id);
+          }
+=======
           payments.forEach(payment => {
             if (payment.order && payment.order.id) {
               cancelOrderMutation.mutate(payment.order.id);
             }
           });
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
           setIsProcessing(false);
         }
       }
@@ -128,18 +162,30 @@ const Cart = () => {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8 text-center">
         <div>
           <ShoppingCart className="mx-auto h-16 w-16 text-slate-300 mb-4" />
+<<<<<<< HEAD
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Your Cart is Empty</h2>
+          <p className="mt-2 text-slate-600 dark:text-slate-400">Log in to view your cart and checkout.</p>
+          <Link to="/login" className="mt-6 inline-block px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors">
+            Log in
+=======
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{t('cart.empty')}</h2>
           <p className="mt-2 text-slate-600 dark:text-slate-400">{t('cart.emptyHint')}</p>
           <Link to="/login" className="mt-6 inline-block px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors">
             {t('nav.login')}
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
           </Link>
         </div>
       </div>
     );
   }
 
+<<<<<<< HEAD
+  if (isLoading) return <div className="p-8 text-center">Loading cart...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Failed to load cart.</div>;
+=======
   if (isLoading) return <div className="p-8 text-center">{t('home.loading')}</div>;
   if (error) return <div className="p-8 text-center text-red-500">{t('errors.somethingWentWrong')}</div>;
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 
   const items = data?.items || [];
   const totalAmount = items.reduce((sum, item) => sum + item.book.price, 0);
@@ -147,16 +193,27 @@ const Cart = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-heading font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
+<<<<<<< HEAD
+        <ShoppingCart className="h-8 w-8 text-primary" /> Your Cart
+=======
         <ShoppingCart className="h-8 w-8 text-primary" /> {t('cart.title')}
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       </h1>
 
       {items.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800 shadow-sm">
           <BookText className="mx-auto h-16 w-16 text-slate-300 mb-4" />
+<<<<<<< HEAD
+          <h2 className="text-2xl font-heading font-semibold text-slate-900 dark:text-white">Your cart is empty</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400 mb-8">Looks like you haven't added any books yet.</p>
+          <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-sm">
+            Browse Books <ArrowRight className="h-4 w-4" />
+=======
           <h2 className="text-2xl font-heading font-semibold text-slate-900 dark:text-white">{t('cart.empty')}</h2>
           <p className="mt-2 text-slate-500 dark:text-slate-400 mb-8">{t('cart.emptyHint')}</p>
           <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-sm">
             {t('cart.browseBooksButton')} <ArrowRight className="h-4 w-4" />
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
           </Link>
         </div>
       ) : (
@@ -193,7 +250,11 @@ const Cart = () => {
                       disabled={removeFromCartMutation.isPending}
                       className="text-red-500 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm font-medium"
                     >
+<<<<<<< HEAD
+                      <Trash2 className="h-4 w-4" /> Remove
+=======
                       <Trash2 className="h-4 w-4" /> {t('cart.remove')}
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
                     </button>
                   </div>
                 </div>
@@ -203,7 +264,11 @@ const Cart = () => {
 
           <div className="w-full lg:w-96 shrink-0">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm sticky top-24">
+<<<<<<< HEAD
+              <h3 className="font-heading font-semibold text-xl text-slate-900 dark:text-white mb-6">Order Summary</h3>
+=======
               <h3 className="font-heading font-semibold text-xl text-slate-900 dark:text-white mb-6">{t('cart.orderSummary')}</h3>
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
               
               <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-6 mb-6">
                 <div className="flex justify-between">
@@ -217,7 +282,11 @@ const Cart = () => {
               </div>
               
               <div className="flex justify-between items-center mb-8">
+<<<<<<< HEAD
+                <span className="font-heading font-semibold text-lg text-slate-900 dark:text-white">Total</span>
+=======
                 <span className="font-heading font-semibold text-lg text-slate-900 dark:text-white">{t('cart.total')}</span>
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
                 <span className="font-bold text-2xl text-slate-900 dark:text-white">₹{totalAmount}</span>
               </div>
               
@@ -226,8 +295,13 @@ const Cart = () => {
                 disabled={isProcessing}
                 className="w-full py-4 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-70 flex justify-center items-center gap-2"
               >
+<<<<<<< HEAD
+                {isProcessing ? 'Processing...' : (
+                  <>Secure Checkout <ShieldCheck className="h-5 w-5" /></>
+=======
                 {isProcessing ? t('cart.processing') : (
                   <>{t('cart.proceedToCheckout')} <ShieldCheck className="h-5 w-5" /></>
+>>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
                 )}
               </button>
               
