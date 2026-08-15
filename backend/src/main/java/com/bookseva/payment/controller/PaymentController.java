@@ -17,8 +17,11 @@ public class PaymentController {
             @RequestBody String payload,
             @RequestHeader("x-razorpay-signature") String signature
     ) {
-        paymentService.handleWebhook(payload, signature);
-        return ResponseEntity.ok().build();
+        boolean success = paymentService.handleWebhook(payload, signature);
+        if (!success) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("success", false, "message", "Webhook verification failed"));
+        }
+        return ResponseEntity.ok(java.util.Map.of("success", true));
     }
 
     @PostMapping("/verify")

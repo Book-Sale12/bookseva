@@ -17,8 +17,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -61,8 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (Exception e) {
-            // Log the error but allow the request to proceed (it might be a public endpoint)
-            System.err.println("JWT Parsing error: " + e.getMessage());
+            log.warn("JWT validation failed for request {}: {}", request.getRequestURI(), e.getMessage());
         }
         
         filterChain.doFilter(request, response);

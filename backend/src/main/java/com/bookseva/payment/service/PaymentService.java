@@ -22,6 +22,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -38,30 +41,41 @@ public class PaymentService {
     private String razorpaySecret;
 
     @Transactional
-    public void handleWebhook(String payload, String signature) {
+    public boolean handleWebhook(String payload, String signature) {
         try {
             boolean isValid = Utils.verifyWebhookSignature(payload, signature, razorpaySecret);
             if (!isValid) {
-                throw new RuntimeException("Invalid Razorpay webhook signature");
+                log.warn("RAZORPAY_WEBHOOK: Signature verification failed.");
+                return false;
             }
 
             JSONObject json = new JSONObject(payload);
-            String event = json.getString("event");
+            String event = json.optString("event", "");
             
             if ("payment.captured".equals(event)) {
                 JSONObject paymentEntity = json.getJSONObject("payload").getJSONObject("payment").getJSONObject("entity");
                 String gatewayOrderId = paymentEntity.getString("order_id");
                 String gatewayPaymentId = paymentEntity.getString("id");
 
-                Payment payment = paymentRepository.findByGatewayOrderId(gatewayOrderId)
-                        .orElseThrow(() -> new RuntimeException("Payment not found for gateway order: " + gatewayOrderId));
+                java.util.List<Payment> payments = paymentRepository.findByGatewayOrderId(gatewayOrderId);
+                if (payments.isEmpty()) {
+                    log.warn("RAZORPAY_WEBHOOK: Payment record not found for order {}", gatewayOrderId);
+                    return true;
+                }
 
-                if (payment.getStatus() != PaymentStatus.COMPLETED) {
-                    processSuccessfulPayment(payment, gatewayPaymentId);
+                for (Payment payment : payments) {
+                    if (payment.getStatus() != PaymentStatus.COMPLETED) {
+                        processSuccessfulPayment(payment, gatewayPaymentId);
+                    }
                 }
             }
+            return true;
         } catch (RazorpayException e) {
-            throw new RuntimeException("Error verifying webhook signature", e);
+            log.error("RAZORPAY_WEBHOOK_ERROR: Error verifying webhook signature", e);
+            return false;
+        } catch (Exception e) {
+            log.error("RAZORPAY_WEBHOOK_ERROR: Error processing webhook payload", e);
+            return false;
         }
     }
 
@@ -76,11 +90,15 @@ public class PaymentService {
                 throw new RuntimeException("Invalid Razorpay payment signature");
             }
 
-            Payment payment = paymentRepository.findByGatewayOrderId(request.getRazorpayOrderId())
-                    .orElseThrow(() -> new RuntimeException("Payment not found for gateway order: " + request.getRazorpayOrderId()));
+            java.util.List<Payment> payments = paymentRepository.findByGatewayOrderId(request.getRazorpayOrderId());
+            if (payments.isEmpty()) {
+                throw new RuntimeException("Payment not found for gateway order: " + request.getRazorpayOrderId());
+            }
 
-            if (payment.getStatus() != PaymentStatus.COMPLETED) {
-                processSuccessfulPayment(payment, request.getRazorpayPaymentId());
+            for (Payment payment : payments) {
+                if (payment.getStatus() != PaymentStatus.COMPLETED) {
+                    processSuccessfulPayment(payment, request.getRazorpayPaymentId());
+                }
             }
 
         } catch (RazorpayException e) {
@@ -90,7 +108,8 @@ public class PaymentService {
 
     private void processSuccessfulPayment(Payment payment, String gatewayPaymentId) {
         Order order = payment.getOrder();
-        Book book = order.getBook();
+        Book book = bookRepository.findByIdWithLock(order.getBook().getId())
+                .orElseThrow(() -> new RuntimeException("Book not found"));
 
         if (book.getStatus() != ListingStatus.ACTIVE || book.getQuantity() < 1) {
             // In a real app, we would initiate a refund here since they paid for a sold-out item.
