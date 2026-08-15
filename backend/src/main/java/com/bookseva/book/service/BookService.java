@@ -260,8 +260,6 @@ public class BookService {
             case GOOD -> { minPct = new java.math.BigDecimal("0.40"); maxPct = new java.math.BigDecimal("0.60"); }
             case FAIR -> { minPct = new java.math.BigDecimal("0.20"); maxPct = new java.math.BigDecimal("0.40"); }
             case POOR -> { minPct = new java.math.BigDecimal("0.05"); maxPct = new java.math.BigDecimal("0.15"); }
-            // TODO: Donate feature disabled temporarily - not working, needs fix.
-            // case DONATE -> { minPct = java.math.BigDecimal.ZERO; maxPct = java.math.BigDecimal.ZERO; }
         }
 
         return java.util.Map.of(
