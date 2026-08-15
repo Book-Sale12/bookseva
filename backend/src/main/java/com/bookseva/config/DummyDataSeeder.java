@@ -23,7 +23,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+import org.springframework.context.annotation.Profile;
+
 @Component
+@Profile("!prod")
 @RequiredArgsConstructor
 @Slf4j
 @Order(2)
@@ -44,17 +47,24 @@ public class DummyDataSeeder implements CommandLineRunner {
             createUser("Bob Engineer", "bob@college.edu", "Mechanical Engineering");
             createUser("Charlie Reader", "charlie@college.edu", "Arts & Humanities");
         } else {
-            alice = userRepository.findByEmail("alice@college.edu").orElseGet(() -> 
-                createUser("Alice Student", "alice@college.edu", "Computer Science")
-            );
+            alice = userRepository.findByEmail("alice@college.edu")
+                    .orElseGet(() -> createUser("Alice Student", "alice@college.edu", "Computer Science"));
         }
 
         if (bookRepository.count() < 50) {
             log.info("Seeding 50 dummy books...");
-            String[] titles = {"Introduction to Algorithms", "Operating System Concepts", "Engineering Mechanics", "Thermodynamics", "A History of the Modern World", "The Art of Public Speaking", "Calculus Early Transcendentals", "Database System Concepts", "Artificial Intelligence", "Data Structures and Algorithms"};
-            String[] authors = {"Thomas H. Cormen", "Abraham Silberschatz", "R.C. Hibbeler", "Yunus A. Cengel", "Palmer", "Stephen Lucas", "James Stewart", "Silberschatz", "Stuart Russell", "Narasimha Karumanchi"};
-            Category[] categories = {Category.ENGINEERING, Category.MEDICAL, Category.SCIENCE, Category.COMMERCE, Category.ARTS_HUMANITIES, Category.DIPLOMA, Category.LAW, Category.MANAGEMENT, Category.COMPUTER_APPLICATIONS, Category.OTHER};
-            ConditionTier[] conditions = {ConditionTier.EXCELLENT, ConditionTier.GOOD, ConditionTier.FAIR, ConditionTier.POOR, ConditionTier.DONATE};
+            String[] titles = { "Introduction to Algorithms", "Operating System Concepts", "Engineering Mechanics",
+                    "Thermodynamics", "A History of the Modern World", "The Art of Public Speaking",
+                    "Calculus Early Transcendentals", "Database System Concepts", "Artificial Intelligence",
+                    "Data Structures and Algorithms" };
+            String[] authors = { "Thomas H. Cormen", "Abraham Silberschatz", "R.C. Hibbeler", "Yunus A. Cengel",
+                    "Palmer", "Stephen Lucas", "James Stewart", "Silberschatz", "Stuart Russell",
+                    "Narasimha Karumanchi" };
+            Category[] categories = { Category.ENGINEERING, Category.MEDICAL, Category.SCIENCE, Category.COMMERCE,
+                    Category.ARTS_HUMANITIES, Category.DIPLOMA, Category.LAW, Category.MANAGEMENT,
+                    Category.COMPUTER_APPLICATIONS, Category.OTHER };
+            ConditionTier[] conditions = { ConditionTier.EXCELLENT, ConditionTier.GOOD, ConditionTier.FAIR,
+                    ConditionTier.POOR, ConditionTier.DONATE };
 
             for (int i = 0; i < 50; i++) {
                 String title = titles[i % titles.length] + " " + (i + 1);
@@ -63,8 +73,9 @@ public class DummyDataSeeder implements CommandLineRunner {
                 ConditionTier condition = conditions[i % conditions.length];
                 BigDecimal mrp = BigDecimal.valueOf(1000 + (i * 50));
                 BigDecimal price = BigDecimal.valueOf(500 + (i * 20));
-                
-                createBook(alice, title, author, category, condition, mrp, price, "This is a dummy description for book " + (i + 1));
+
+                createBook(alice, title, author, category, condition, mrp, price,
+                        "This is a dummy description for book " + (i + 1));
             }
             log.info("50 Dummy books seeded successfully.");
         } else {
@@ -87,7 +98,8 @@ public class DummyDataSeeder implements CommandLineRunner {
         return userRepository.save(user);
     }
 
-    private void createBook(User seller, String title, String author, Category category, ConditionTier condition, BigDecimal mrp, BigDecimal price, String desc) {
+    private void createBook(User seller, String title, String author, Category category, ConditionTier condition,
+            BigDecimal mrp, BigDecimal price, String desc) {
         Book book = Book.builder()
                 .title(title)
                 .author(author)

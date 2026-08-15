@@ -11,4 +11,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByBuyerEmailOrderByCreatedAtDesc(String email);
     List<Order> findBySellerEmailOrderByCreatedAtDesc(String email);
     boolean existsByBookIdAndStatusNot(Long bookId, com.bookseva.order.OrderStatus status);
+    List<Order> findByStatusAndUpdatedAtBefore(com.bookseva.order.OrderStatus status, java.time.LocalDateTime threshold);
 }

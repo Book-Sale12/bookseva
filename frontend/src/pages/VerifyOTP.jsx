@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import { BookOpen, KeyRound } from 'lucide-react';
 
 const VerifyOTP = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const email = location.state?.email || '';
 
   const [otp, setOtp] = useState('');
@@ -16,7 +18,7 @@ const VerifyOTP = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (otp.length !== 6) {
-      setError('OTP must be 6 digits.');
+      setError(t('auth.otpMustBe6'));
       return;
     }
 
@@ -29,12 +31,12 @@ const VerifyOTP = () => {
         otp,
       });
       
-      setSuccess('Account verified successfully! Redirecting to login...');
+      setSuccess(t('auth.accountVerified'));
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Verification failed. Invalid or expired OTP.');
+      setError(err.response?.data?.error?.message || t('auth.verificationFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -47,7 +49,7 @@ const VerifyOTP = () => {
       await api.post('/auth/resend-otp', { email });
       setSuccess('A new OTP has been sent to your email.');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to resend OTP. Please try again later.');
+      setError(err.response?.data?.error?.message || t('errors.somethingWentWrong'));
     }
   };
 
@@ -55,10 +57,10 @@ const VerifyOTP = () => {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-8 text-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Missing Information</h2>
-          <p className="mt-2 text-slate-600 dark:text-slate-400">We don't know which email to verify.</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{t('auth.missingInfo')}</h2>
+          <p className="mt-2 text-slate-600 dark:text-slate-400">{t('auth.missingInfoDesc')}</p>
           <Link to="/register" className="mt-4 inline-block text-primary font-medium hover:underline">
-            Go back to registration
+            {t('auth.goToRegistration')}
           </Link>
         </div>
       </div>
@@ -72,10 +74,10 @@ const VerifyOTP = () => {
           <BookOpen className="h-12 w-12 text-primary" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-heading font-bold text-slate-900 dark:text-white">
-          Verify your email
+          {t('auth.verifyEmailTitle')}
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-          We've sent a 6-digit code to <span className="font-medium text-slate-900 dark:text-slate-200">{email}</span>
+          {t('auth.verifyEmailSubtitle')} <span className="font-medium text-slate-900 dark:text-slate-200">{email}</span>
         </p>
       </div>
 
@@ -97,7 +99,7 @@ const VerifyOTP = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Verification Code
+                {t('auth.verificationCode')}
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -120,18 +122,18 @@ const VerifyOTP = () => {
                 disabled={isSubmitting || otp.length !== 6}
                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-70"
               >
-                {isSubmitting ? 'Verifying...' : 'Verify Email'}
+                {isSubmitting ? t('auth.verifying') : t('auth.verifyEmail')}
               </button>
             </div>
             
             <div className="text-center text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Didn't receive the code? </span>
+              <span className="text-slate-600 dark:text-slate-400">{t('auth.didNotReceive')} </span>
               <button
                 type="button"
                 onClick={handleResend}
                 className="font-medium text-primary hover:text-primary/80 transition-colors"
               >
-                Resend OTP
+                {t('auth.resendOtp')}
               </button>
             </div>
           </form>

@@ -48,7 +48,12 @@ public class OrderService {
         User buyer = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
 
-        List<Payment> payments = new ArrayList<>();
+        if (cartItemIds == null || cartItemIds.isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
+
+        List<CartItem> validCartItems = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (Long itemId : cartItemIds) {
             CartItem cartItem = cartItemRepository.findById(itemId)
@@ -58,15 +63,30 @@ public class OrderService {
                 throw new RuntimeException("Unauthorized");
             }
 
-            Book book = cartItem.getBook();
-
-            // Optimistic locking check is handled automatically by JPA @Version when updating
+            Book book = bookRepository.findByIdWithLock(cartItem.getBook().getId())
+                    .orElseThrow(() -> new RuntimeException("Book not found"));
             if (book.getStatus() != ListingStatus.ACTIVE || book.getQuantity() < 1) {
                 throw new RuntimeException("Book " + book.getTitle() + " is no longer available");
             }
 
-            // We do not decrement quantity or set status to SOLD here anymore.
-            // This will only happen on confirmed payment.
+            validCartItems.add(cartItem);
+            totalAmount = totalAmount.add(book.getPrice());
+        }
+
+        // Create a single Razorpay Order for the total amount
+        JSONObject orderRequest = new JSONObject();
+        // Amount in paise
+        orderRequest.put("amount", totalAmount.multiply(new BigDecimal("100")).setScale(0, java.math.RoundingMode.HALF_UP).longValue());
+        orderRequest.put("currency", "INR");
+        orderRequest.put("receipt", "txn_cart_" + System.currentTimeMillis());
+
+        com.razorpay.Order razorpayOrder = razorpayClient.orders.create(orderRequest);
+        String gatewayOrderId = razorpayOrder.get("id");
+
+        List<Payment> payments = new ArrayList<>();
+
+        for (CartItem cartItem : validCartItems) {
+            Book book = cartItem.getBook();
 
             Order order = Order.builder()
                     .buyer(buyer)
@@ -79,18 +99,9 @@ public class OrderService {
 
             orderRepository.save(order);
 
-            // Create Razorpay Order
-            JSONObject orderRequest = new JSONObject();
-            // Amount in paise
-            orderRequest.put("amount", book.getPrice().multiply(new BigDecimal("100")).intValue());
-            orderRequest.put("currency", "INR");
-            orderRequest.put("receipt", "txn_" + order.getId());
-
-            com.razorpay.Order razorpayOrder = razorpayClient.orders.create(orderRequest);
-
             Payment payment = Payment.builder()
                     .order(order)
-                    .gatewayOrderId(razorpayOrder.get("id"))
+                    .gatewayOrderId(gatewayOrderId)
                     .amount(book.getPrice())
                     .method("RAZORPAY")
                     .status(PaymentStatus.PENDING)
@@ -98,9 +109,6 @@ public class OrderService {
 
             paymentRepository.save(payment);
             payments.add(payment);
-
-            // Do NOT remove from cart yet, wait until payment succeeds
-            // cartItemRepository.delete(cartItem);
         }
 
         return payments;
