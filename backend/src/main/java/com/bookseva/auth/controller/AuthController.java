@@ -34,7 +34,8 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest request, HttpServletResponse httpServletResponse) {
+    public ResponseEntity<?> verifyOtp(@Valid @RequestBody VerifyOtpRequest request,
+            HttpServletResponse httpServletResponse) {
         AuthResponse response = authService.verifyOtp(request);
         setRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.ok(Map.of("success", true, "data", response));
@@ -56,7 +57,8 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody com.bookseva.auth.dto.ForgotPasswordRequest request) {
         authService.forgotPassword(request);
-        return ResponseEntity.ok(Map.of("success", true, "message", "If your email is registered, you will receive a reset OTP shortly."));
+        return ResponseEntity.ok(Map.of("success", true, "message",
+                "If your email is registered, you will receive a reset OTP shortly."));
     }
 
     @PostMapping("/reset-password")
@@ -66,16 +68,20 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken, HttpServletResponse httpServletResponse) {
+    public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse httpServletResponse) {
         AuthResponse response = authService.refreshToken(refreshToken);
         setRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
         return ResponseEntity.ok(Map.of("success", true, "data", response));
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.cookie-secure:false}")
+    private boolean cookieSecure;
+
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false) // Set to true in production
+                .secure(cookieSecure)
                 .path("/api/v1/auth/refresh")
                 .maxAge(7 * 24 * 60 * 60) // 7 days
                 .sameSite("Lax")

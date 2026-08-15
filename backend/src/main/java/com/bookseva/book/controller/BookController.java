@@ -101,9 +101,6 @@ public class BookController {
             Authentication authentication
     ) {
         String email = authentication.getName();
-<<<<<<< HEAD
-        com.bookseva.book.ListingStatus status = com.bookseva.book.ListingStatus.valueOf(body.get("status"));
-=======
         String statusStr = body.get("status");
         if (statusStr == null || statusStr.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", Map.of("message", "Status field is required")));
@@ -114,7 +111,6 @@ public class BookController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", Map.of("message", "Invalid status value: " + statusStr)));
         }
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
         Book book = bookService.updateListingStatus(id, status, email);
         return ResponseEntity.ok(Map.of("success", true, "data", book));
     }

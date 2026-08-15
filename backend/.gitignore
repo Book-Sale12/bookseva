@@ -4,6 +4,12 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Deployment prep additions
+.env
+*.log
+.DS_Store
+application-local.yml
+
 ### STS ###
 .apt_generated
 .classpath

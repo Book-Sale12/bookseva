@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { BookOpen, Mail, Lock } from 'lucide-react';
@@ -15,6 +16,7 @@ const loginSchema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [serverError, setServerError] = useState('');
   
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -36,7 +38,7 @@ const Login = () => {
       if (err.response?.data?.error?.code === 'UNVERIFIED_ACCOUNT') {
         navigate('/verify-otp', { state: { email: data.email } });
       } else {
-        setServerError(err.response?.data?.error?.message || 'Login failed. Please check your credentials.');
+      setServerError(err.response?.data?.error?.message || t('auth.loginFailed'));
       }
     }
   };
@@ -48,12 +50,12 @@ const Login = () => {
           <BookOpen className="h-12 w-12 text-primary" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-heading font-bold text-slate-900 dark:text-white">
-          Sign in to BookSeva
+          {t('auth.signInTitle')}
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600 dark:text-slate-400">
-          Or{' '}
+          {t('auth.orCreateAccount')}{' '}
           <Link to="/register" className="font-medium text-primary hover:text-primary/80 transition-colors">
-            create a new account
+            {t('auth.orCreateAccount')}
           </Link>
         </p>
       </div>
@@ -70,7 +72,7 @@ const Login = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Email address
+                {t('auth.emailLabel')}
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -88,7 +90,7 @@ const Login = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Password
+                {t('auth.passwordLabel')}
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -113,13 +115,13 @@ const Login = () => {
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-900 dark:text-slate-300">
-                  Remember me
+                  {t('auth.rememberMe')}
                 </label>
               </div>
 
               <div className="text-sm">
                 <Link to="/forgot-password" className="font-medium text-primary hover:text-primary/80">
-                  Forgot your password?
+                  {t('auth.forgotPassword')}
                 </Link>
               </div>
             </div>
@@ -130,7 +132,7 @@ const Login = () => {
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-70"
               >
-                {isSubmitting ? 'Signing in...' : 'Sign in'}
+                {isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
               </button>
             </div>
           </form>

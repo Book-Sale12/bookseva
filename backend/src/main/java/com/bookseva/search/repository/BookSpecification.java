@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // package com.bookseva.search.repository;
 
 // import com.bookseva.book.Book;
@@ -59,8 +58,6 @@
 //     }
 // }
 
-=======
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 package com.bookseva.search.repository;
 
 import com.bookseva.book.Book;

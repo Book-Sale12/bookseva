@@ -1,0 +1,29 @@
+# Java/Spring Boot
+target/
+*.class
+.idea/
+*.iml
+.mvn/wrapper/maven-wrapper.jar
+
+# React/Vite
+node_modules/
+dist/
+build/
+.vite/
+
+# Env/Secrets
+.env
+.env.local
+application-local.properties
+application-local.yml
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Logs & Scripts
+*.log
+backend.log
+test_cart.sh
+books.json
+

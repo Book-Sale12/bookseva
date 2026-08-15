@@ -2,11 +2,86 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
-import { BookOpen, ShoppingCart, User as UserIcon, LogOut, Bell, CheckCircle, MessageSquare } from 'lucide-react';
+import { BookOpen, ShoppingCart, User as UserIcon, LogOut, Bell, CheckCircle, MessageSquare, Globe, Check } from 'lucide-react';
 
+// ---------------------------------------------------------------------------
+// Language Switcher
+// ---------------------------------------------------------------------------
+const LANGUAGES = [
+  { code: 'en', label: 'English', nativeLabel: 'English' },
+  { code: 'hi', label: 'Hindi', nativeLabel: 'हिंदी' },
+  { code: 'mr', label: 'Marathi', nativeLabel: 'मराठी' },
+];
+
+const LanguageSwitcher = () => {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const currentLang = LANGUAGES.find(l => l.code === i18n.language) || LANGUAGES[0];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (code) => {
+    i18n.changeLanguage(code);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Change language"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <Globe className="h-4 w-4" />
+        <span className="hidden sm:inline">{currentLang.code.toUpperCase()}</span>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 mt-2 w-40 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50"
+        >
+          {LANGUAGES.map(lang => (
+            <button
+              key={lang.code}
+              role="option"
+              aria-selected={i18n.language === lang.code}
+              onClick={() => handleSelect(lang.code)}
+              className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors
+                ${i18n.language === lang.code
+                  ? 'bg-primary/10 text-primary font-semibold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+            >
+              {/* Always show native script so users can recognise their language */}
+              <span>{lang.nativeLabel}</span>
+              {i18n.language === lang.code && <Check className="h-3.5 w-3.5" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Navbar
+// ---------------------------------------------------------------------------
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const queryClient = useQueryClient();
@@ -107,25 +182,35 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <Link
+              to="/about"
+              className="hidden md:block text-sm font-medium text-slate-700 hover:text-primary dark:text-slate-300 dark:hover:text-primary transition-colors mr-2"
+            >
+              {t('nav.aboutUs')}
+            </Link>
+
+            {/* Language switcher — always visible */}
+            <LanguageSwitcher />
+
             {isAuthenticated ? (
               <>
                 <Link
                   to="/sell"
                   className="hidden md:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 shadow-sm transition-colors"
                 >
-                  Sell a Book
+                  {t('nav.sellABook')}
                 </Link>
                 <Link
                   to="/profile"
                   className="text-sm font-medium text-slate-700 hover:text-primary dark:text-slate-300 dark:hover:text-primary transition-colors"
                 >
-                  Profile
+                  {t('nav.profile')}
                 </Link>
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 relative transition-colors"
-                    title="Notifications"
+                    title={t('nav.notifications')}
                   >
                     <Bell className="h-6 w-6" />
                     {unreadCount > 0 && (
@@ -138,12 +223,12 @@ const Navbar = () => {
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-50 transform origin-top-right transition-all">
                       <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
-                        <h3 className="font-semibold text-slate-800 dark:text-white">Notifications</h3>
+                        <h3 className="font-semibold text-slate-800 dark:text-white">{t('nav.notifications')}</h3>
                       </div>
                       <div className="max-h-[400px] overflow-y-auto">
                         {notifications.length === 0 ? (
                           <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                            You have no notifications yet.
+                            {t('nav.noNotifications')}
                           </div>
                         ) : (
                           <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -184,7 +269,7 @@ const Navbar = () => {
                 <Link
                   to="/inbox"
                   className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 relative transition-colors"
-                  title="Messages Inbox"
+                  title={t('nav.messages')}
                 >
                   <MessageSquare className="h-6 w-6" />
                   {unreadMessagesCount > 0 && (
@@ -197,7 +282,7 @@ const Navbar = () => {
                 <Link
                   to="/cart"
                   className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 relative transition-colors"
-                  title="Cart"
+                  title={t('nav.cart')}
                 >
                   <ShoppingCart className="h-6 w-6" />
                   {cartCount > 0 && (
@@ -211,18 +296,18 @@ const Navbar = () => {
                     to="/admin"
                     className="hidden md:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
                   >
-                    Admin Panel
+                    {t('nav.adminPanel')}
                   </Link>
                 )}
                 <div className="flex items-center gap-2 pl-4 border-l border-slate-200 dark:border-slate-700">
                   <div className="flex flex-col items-end hidden md:flex">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{user.name}</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">Trust Score: {displayTrustScore}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{t('nav.trustScore')}: {displayTrustScore}</span>
                   </div>
                   <button
                     onClick={logout}
                     className="p-2 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-500 transition-colors"
-                    title="Logout"
+                    title={t('nav.logout')}
                   >
                     <LogOut className="h-5 w-5" />
                   </button>
@@ -234,13 +319,13 @@ const Navbar = () => {
                   to="/login"
                   className="text-sm font-medium text-slate-700 hover:text-primary dark:text-slate-300 dark:hover:text-primary transition-colors"
                 >
-                  Log in
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 shadow-sm transition-colors"
                 >
-                  Sign up
+                  {t('nav.signup')}
                 </Link>
               </>
             )}

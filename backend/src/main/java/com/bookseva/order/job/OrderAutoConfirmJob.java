@@ -25,10 +25,7 @@ public class OrderAutoConfirmJob {
         log.info("Running auto-confirm orders job...");
         LocalDateTime threshold = LocalDateTime.now().minusHours(48);
         
-        List<Order> eligibleOrders = orderRepository.findAll().stream()
-                .filter(o -> o.getStatus() == OrderStatus.HANDED_OVER)
-                .filter(o -> o.getUpdatedAt() != null && o.getUpdatedAt().isBefore(threshold))
-                .toList();
+        List<Order> eligibleOrders = orderRepository.findByStatusAndUpdatedAtBefore(OrderStatus.HANDED_OVER, threshold);
 
         for (Order order : eligibleOrders) {
             log.info("Auto-confirming order {}", order.getId());
