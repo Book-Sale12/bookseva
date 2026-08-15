@@ -35,8 +35,10 @@ public class AuthService {
     private final JwtService jwtService;
     private final MailService mailService;
 
+
     @Transactional
     public void register(RegisterRequest request) {
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
@@ -63,6 +65,9 @@ public class AuthService {
         if (recentOtp.isPresent() && recentOtp.get().getCreatedAt().plusMinutes(1).isAfter(LocalDateTime.now())) {
             throw new RuntimeException("Please wait 1 minute before requesting a new OTP.");
         }
+
+        // Invalidate all previous OTPs for this user+purpose before generating a new one
+        otpRepository.deleteAllByUserAndPurpose(user, purpose);
 
         String otp = String.format("%06d", new SecureRandom().nextInt(999999));
         

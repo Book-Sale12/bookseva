@@ -32,7 +32,8 @@ const AdminDashboard = () => {
     queryKey: ['adminUsers'],
     queryFn: async () => {
       const res = await api.get('/admin/users');
-      return res.data.data;
+      const data = res.data.data;
+      return Array.isArray(data) ? data : (data?.content ?? []);
     },
     enabled: activeTab === 'users',
   });
@@ -114,7 +115,8 @@ const AdminDashboard = () => {
     queryKey: ['adminBooks', activeSearch],
     queryFn: async () => {
       const res = await api.get(`/admin/books?search=${encodeURIComponent(activeSearch)}`);
-      return res.data.data;
+      const data = res.data.data;
+      return Array.isArray(data) ? data : (data?.content ?? []);
     },
     enabled: activeTab === 'listings',
   });

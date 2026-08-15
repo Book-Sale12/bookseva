@@ -3,10 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, useParams } from "react-router-dom";
-<<<<<<< HEAD
-=======
 import { useQueryClient } from "@tanstack/react-query";
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { ImagePlus, Info, X } from "lucide-react";
@@ -19,14 +16,6 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 
-<<<<<<< HEAD
-const editListingSchema = z.object({
-  title: z
-    .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(150, "Title cannot exceed 150 characters"),
-  author: z.string().min(2, "Author is required"),
-=======
 const DESCRIPTION_MAX = 150;
 
 const editListingSchema = z.object({
@@ -39,7 +28,6 @@ const editListingSchema = z.object({
     .string()
     .min(2, "Author name must be at least 2 characters")
     .regex(/^(?!\d+$).+$/, "Author cannot be purely numeric"),
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
   isbn: z.string().optional().nullable(),
   category: z.string().min(1, "Category is required"),
   condition: z.string().min(1, "Condition is required"),
@@ -47,10 +35,6 @@ const editListingSchema = z.object({
   price: z.number().min(1, "Price must be greater than 0"),
   description: z
     .string()
-<<<<<<< HEAD
-    .min(20, "Description must be at least 20 characters")
-    .max(2000, "Description too long"),
-=======
     .min(10, "Description must be at least 10 characters")
     .max(DESCRIPTION_MAX, `Description cannot exceed ${DESCRIPTION_MAX} characters`)
     .superRefine((val, ctx) => {
@@ -70,7 +54,6 @@ const editListingSchema = z.object({
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Description cannot contain repeated special characters (e.g., \"...\", \"!!!\")." });
       }
     }),
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
   images: z
     .any()
     .optional()
@@ -92,33 +75,16 @@ const EditListing = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-<<<<<<< HEAD
-=======
   const queryClient = useQueryClient();
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   
   const [existingImages, setExistingImages] = useState([]);
-<<<<<<< HEAD
-  const [newImagePreviews, setNewImagePreviews] = useState([]);
-=======
   const [newPhotos, setNewPhotos] = useState([]);
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 
   const {
     register,
     handleSubmit,
-<<<<<<< HEAD
-    formState: { errors, isSubmitting },
-    watch,
-    reset,
-  } = useForm({
-    resolver: zodResolver(editListingSchema),
-  });
-
-  useEffect(() => {
-=======
     formState: { errors, isSubmitting, isValid },
     watch,
     reset,
@@ -133,7 +99,6 @@ const EditListing = () => {
   }, [register]);
 
   useEffect(() => {
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
     const fetchListing = async () => {
       try {
         const res = await api.get(`/books/${id}`);
@@ -171,27 +136,6 @@ const EditListing = () => {
     }
   }, [id, isAuthenticated, reset, navigate, user]);
 
-<<<<<<< HEAD
-  const watchImages = watch("images");
-
-  useEffect(() => {
-    if (watchImages && watchImages.length > 0) {
-      const newPreviews = Array.from(watchImages).map((file) =>
-        URL.createObjectURL(file),
-      );
-      setNewImagePreviews(newPreviews);
-
-      return () => {
-        newPreviews.forEach((url) => URL.revokeObjectURL(url));
-      };
-    } else {
-      setNewImagePreviews([]);
-    }
-  }, [watchImages]);
-
-  const watchCondition = watch("condition");
-  const watchMrp = watch("mrp");
-=======
   const handleNewPhotoChange = (e) => {
     const files = Array.from(e.target.files);
     if (existingImages.length + newPhotos.length + files.length > 5) {
@@ -217,7 +161,6 @@ const EditListing = () => {
   const watchCondition = watch("condition");
   const watchMrp = watch("mrp");
   const watchDescription = watch("description", "");
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
 
   const getSuggestedPrice = (condition, mrp) => {
     if (!condition || !mrp) return null;
@@ -226,12 +169,8 @@ const EditListing = () => {
       case "GOOD": return { min: mrp * 0.4, max: mrp * 0.6 };
       case "FAIR": return { min: mrp * 0.2, max: mrp * 0.4 };
       case "POOR": return { min: mrp * 0.05, max: mrp * 0.15 };
-<<<<<<< HEAD
-      case "DONATE": return { min: 0, max: 0 };
-=======
       // TODO: Donate feature disabled temporarily - not working, needs fix.
       // case "DONATE": return { min: 0, max: 0 };
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       default: return null;
     }
   };
@@ -246,11 +185,7 @@ const EditListing = () => {
     try {
       setServerError("");
       
-<<<<<<< HEAD
-      const totalImages = existingImages.length + (data.images ? data.images.length : 0);
-=======
       const totalImages = existingImages.length + newPhotos.length;
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       if (totalImages < 1 || totalImages > 5) {
         setServerError("You must have between 1 and 5 images total.");
         return;
@@ -258,13 +193,8 @@ const EditListing = () => {
 
       const formData = new FormData();
 
-<<<<<<< HEAD
-      if (data.images && data.images.length > 0) {
-        Array.from(data.images).forEach((file) => {
-=======
       if (newPhotos.length > 0) {
         newPhotos.forEach((file) => {
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
           formData.append("images", file);
         });
       }
@@ -290,10 +220,7 @@ const EditListing = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-<<<<<<< HEAD
-=======
       queryClient.invalidateQueries({ queryKey: ["book", id] });
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
       navigate(`/books/${id}`);
     } catch (err) {
       setServerError(
@@ -415,10 +342,8 @@ const EditListing = () => {
                 <option value="GOOD">Good (Minor wear, few highlights)</option>
                 <option value="FAIR">Fair (Visible wear, some torn pages)</option>
                 <option value="POOR">Poor (Heavy damage, for parts)</option>
-<<<<<<< HEAD
-                <option value="DONATE">Donate (Free)</option>
-=======
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
+                {/* TODO: Donate feature disabled temporarily - not working, needs fix. */}
+                {/* <option value="DONATE">Donate (Free)</option> */}
               </select>
               {errors.condition && <p className="mt-1 text-sm text-red-500">{errors.condition.message}</p>}
             </div>
@@ -429,11 +354,6 @@ const EditListing = () => {
               <textarea
                 {...register("description")}
                 rows="4"
-<<<<<<< HEAD
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-slate-900 dark:text-white focus:ring-primary focus:border-primary resize-none"
-              ></textarea>
-              {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description.message}</p>}
-=======
                 maxLength={DESCRIPTION_MAX}
                 className={`w-full rounded-lg border bg-white dark:bg-slate-800 px-4 py-2 text-slate-900 dark:text-white focus:ring-primary focus:border-primary resize-none transition-colors ${errors.description ? 'border-red-500 focus:border-red-500' : 'border-slate-300 dark:border-slate-700'}`}
               ></textarea>
@@ -447,7 +367,6 @@ const EditListing = () => {
                   {watchDescription?.length ?? 0}/{DESCRIPTION_MAX}
                 </span>
               </div>
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
             </div>
           </div>
         </div>
@@ -529,35 +448,6 @@ const EditListing = () => {
           )}
 
           <div className="mt-4">
-<<<<<<< HEAD
-             <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Add New Photos</h3>
-            <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 dark:border-slate-700 border-dashed rounded-xl cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <ImagePlus className="w-8 h-8 text-slate-400 mb-2" />
-                  <p className="mb-1 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold">Click to add new images</span>
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  {...register("images")}
-                />
-              </label>
-            </div>
-            {errors.images && <p className="mt-2 text-sm text-red-500">{errors.images.message}</p>}
-          </div>
-
-          {newImagePreviews.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4">
-              {newImagePreviews.map((url, i) => (
-                <div key={`new-${i}`} className="relative aspect-square rounded-xl overflow-hidden border border-blue-200 shadow-sm">
-                  <img src={url} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-blue-500/80 text-white text-xs text-center py-1">New</div>
-=======
             {existingImages.length + newPhotos.length < 5 && (
               <>
                 <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Add New Photos</h3>
@@ -599,7 +489,6 @@ const EditListing = () => {
                   >
                     <X className="h-4 w-4" />
                   </button>
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
                 </div>
               ))}
             </div>
@@ -609,11 +498,7 @@ const EditListing = () => {
         <div className="pt-6">
           <button
             type="submit"
-<<<<<<< HEAD
-            disabled={isSubmitting}
-=======
             disabled={isSubmitting || !isValid || (existingImages.length + newPhotos.length === 0)}
->>>>>>> 7fb50eb898dfa7106f0876c78aeafb3c656106d2
             className="w-full py-4 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-70 text-lg"
           >
             {isSubmitting ? "Saving Changes..." : "Save Changes"}
