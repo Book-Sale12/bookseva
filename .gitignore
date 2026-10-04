@@ -27,3 +27,4 @@ backend.log
 test_cart.sh
 books.json
 
+.vscode/
