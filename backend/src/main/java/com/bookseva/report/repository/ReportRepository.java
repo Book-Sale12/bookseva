@@ -1,6 +1,6 @@
 package com.bookseva.report.repository;
 
-import com.bookseva.report.Report;
+import com.bookseva.report.entity.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

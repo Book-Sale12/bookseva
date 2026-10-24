@@ -1,6 +1,6 @@
 package com.bookseva.payment.repository;
 
-import com.bookseva.payment.Payment;
+import com.bookseva.payment.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

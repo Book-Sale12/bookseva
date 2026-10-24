@@ -1,6 +1,8 @@
 package com.bookseva.cart.repository;
+import com.bookseva.cart.entity.Cart;
 
-import com.bookseva.cart.CartItem;
+
+import com.bookseva.cart.entity.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

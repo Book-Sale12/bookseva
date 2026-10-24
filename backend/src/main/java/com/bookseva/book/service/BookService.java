@@ -1,30 +1,34 @@
 package com.bookseva.book.service;
+import com.bookseva.book.entity.Book;
+import com.bookseva.book.entity.BookImage;
+import com.bookseva.book.entity.Category;
+import com.bookseva.book.entity.ConditionTier;
+import com.bookseva.book.entity.ListingStatus;
+import com.bookseva.book.repository.BookImageRepository;
+import com.bookseva.book.repository.BookRepository;
+import com.bookseva.order.entity.Order;
+import com.bookseva.order.entity.OrderStatus;
+import com.bookseva.book.specification.BookFilterSpecification;
 
-import com.bookseva.book.*;
+
 import com.bookseva.book.dto.BookCreateRequest;
 import com.bookseva.book.dto.BookUpdateRequest;
 import com.bookseva.common.exception.ImageUploadFailedException;
 import com.bookseva.order.repository.OrderRepository;
-import com.bookseva.user.User;
-import com.bookseva.user.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.bookseva.user.entity.User;
+import com.bookseva.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class BookService {
-
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BookService.class);
     private final BookRepository bookRepository;
     private final BookImageRepository bookImageRepository;
     private final CloudinaryService cloudinaryService;
@@ -53,15 +57,11 @@ public class BookService {
         if (images.size() > 5) {
             throw new com.bookseva.common.exception.ImageValidationException("photos", "Maximum 5 photos allowed per book listing");
         }
-
         // --- Step 2: Validate business rules (fail fast, before any I/O) ---
         if (request.getPrice().compareTo(request.getMrp()) > 0) {
             throw new RuntimeException("Selling price cannot be greater than MRP");
         }
-
-        User seller = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Seller not found"));
-
+        User seller = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("Seller not found"));
         // --- Step 3: Upload images to Cloudinary BEFORE opening DB transaction ---
         // If a failure occurs midway, clean up already-uploaded images and surface a clear error.
         List<String> uploadedUrls = new ArrayList<>();
@@ -79,10 +79,8 @@ public class BookService {
                     log.error("ORPHANED_CLOUDINARY_FILE: Failed to delete Cloudinary image after upload error. URL={}", url, cleanupEx);
                 }
             }
-            throw new ImageUploadFailedException(
-                    "Image upload failed, possibly due to a network issue. Please try again.", uploadEx);
+            throw new ImageUploadFailedException("Image upload failed, possibly due to a network issue. Please try again.", uploadEx);
         }
-
         // --- Step 4: Persist Book + BookImages in a single transaction ---
         // A failure here rolls back both — no partial record is left in the DB.
         return persistListing(request, seller, uploadedUrls);
@@ -94,53 +92,29 @@ public class BookService {
      */
     public Book persistListing(BookCreateRequest request, User seller, List<String> imageUrls) {
         return new TransactionTemplate(transactionManager).execute(status -> {
-            Book book = Book.builder()
-                    .seller(seller)
-                    .title(request.getTitle())
-                    .author(request.getAuthor())
-                    .isbn(request.getIsbn())
-                    .category(request.getCategory())
-                    .condition(request.getCondition())
-                    .mrp(request.getMrp())
-                    .price(request.getPrice())
-                    .description(request.getDescription())
-                    .quantity(request.getQuantity())
-                    .status(ListingStatus.ACTIVE)
-                    .build();
-
+            Book book = Book.builder().seller(seller).title(request.getTitle()).author(request.getAuthor()).isbn(request.getIsbn()).category(request.getCategory()).condition(request.getCondition()).mrp(request.getMrp()).price(request.getPrice()).description(request.getDescription()).quantity(request.getQuantity()).status(ListingStatus.ACTIVE).build();
             book = bookRepository.save(book);
-
             int sortOrder = 0;
             for (String url : imageUrls) {
-                BookImage bookImage = BookImage.builder()
-                        .book(book)
-                        .url(url)
-                        .sortOrder(sortOrder++)
-                        .build();
+                BookImage bookImage = BookImage.builder().book(book).url(url).sortOrder(sortOrder++).build();
                 bookImageRepository.save(bookImage);
             }
-
             return book;
         });
     }
 
     public Book updateListing(Long bookId, BookUpdateRequest request, List<MultipartFile> newImages, String userEmail) throws IOException {
         // Fetch book outside transaction to validate first (it will be refetched inside transaction for safety)
-        Book preCheckBook = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
-
+        Book preCheckBook = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
         if (!preCheckBook.getSeller().getEmail().equals(userEmail)) {
             throw new RuntimeException("Not authorized to edit this listing");
         }
-
-        if (orderRepository.existsByBookIdAndStatusNot(bookId, com.bookseva.order.OrderStatus.CANCELLED)) {
+        if (orderRepository.existsByBookIdAndStatusNot(bookId, com.bookseva.order.entity.OrderStatus.CANCELLED)) {
             throw new RuntimeException("Cannot edit listing because an order has already been placed for it.");
         }
-
         if (request.getPrice().compareTo(request.getMrp()) > 0) {
             throw new RuntimeException("Selling price cannot be greater than MRP");
         }
-
         List<String> keptImageUrls = request.getKeptImageUrls() != null ? request.getKeptImageUrls() : List.of();
         int totalImages = keptImageUrls.size() + (newImages != null ? newImages.size() : 0);
         if (totalImages == 0) {
@@ -149,7 +123,6 @@ public class BookService {
         if (totalImages > 5) {
             throw new com.bookseva.common.exception.ImageValidationException("photos", "Maximum 5 photos allowed per book listing");
         }
-
         // --- Upload new images to Cloudinary BEFORE opening DB transaction ---
         List<String> newlyUploadedUrls = new ArrayList<>();
         if (newImages != null && !newImages.isEmpty()) {
@@ -167,16 +140,12 @@ public class BookService {
                         log.error("ORPHANED_CLOUDINARY_FILE: Failed to delete Cloudinary image after upload error. URL={}", url, cleanupEx);
                     }
                 }
-                throw new ImageUploadFailedException(
-                        "Image upload failed, possibly due to a network issue. Please try again.", uploadEx);
+                throw new ImageUploadFailedException("Image upload failed, possibly due to a network issue. Please try again.", uploadEx);
             }
         }
-
         // --- Execute DB changes inside a single transaction ---
         return new TransactionTemplate(transactionManager).execute(status -> {
-            Book book = bookRepository.findById(bookId)
-                    .orElseThrow(() -> new RuntimeException("Book not found"));
-
+            Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
             book.setTitle(request.getTitle());
             book.setAuthor(request.getAuthor());
             book.setIsbn(request.getIsbn());
@@ -185,11 +154,8 @@ public class BookService {
             book.setCondition(request.getCondition());
             book.setMrp(request.getMrp());
             book.setPrice(request.getPrice());
-
             book = bookRepository.save(book);
-
             List<BookImage> existingImages = book.getImages();
-
             // Remove unkept images from Cloudinary and DB collection
             existingImages.removeIf(image -> {
                 if (!keptImageUrls.contains(image.getUrl())) {
@@ -202,31 +168,24 @@ public class BookService {
                 }
                 return false;
             });
-
             // Save new images
             if (!newlyUploadedUrls.isEmpty()) {
                 int sortOrder = keptImageUrls.size();
                 for (String url : newlyUploadedUrls) {
-                    BookImage bookImage = BookImage.builder()
-                            .book(book)
-                            .url(url)
-                            .sortOrder(sortOrder++)
-                            .build();
+                    BookImage bookImage = BookImage.builder().book(book).url(url).sortOrder(sortOrder++).build();
                     bookImageRepository.save(bookImage);
                 }
             }
-
             return book;
         });
     }
 
     public org.springframework.data.domain.Page<Book> getAllBooks(String title, Category category, ConditionTier condition, java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice, String collegeName, String courseBranch, org.springframework.data.domain.Pageable pageable) {
-        return bookRepository.findAll(BookSpecification.filterBooks(title, category, condition, minPrice, maxPrice, collegeName, courseBranch), pageable);
+        return bookRepository.findAll(BookFilterSpecification.filterBooks(title, category, condition, minPrice, maxPrice, collegeName, courseBranch), pageable);
     }
 
     public Book getBookById(Long id) {
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+        return bookRepository.findById(id).orElseThrow(() -> new RuntimeException("Book not found"));
     }
 
     public List<Book> getMyBooks(String email) {
@@ -235,18 +194,14 @@ public class BookService {
 
     @Transactional
     public Book updateListingStatus(Long bookId, ListingStatus newStatus, String userEmail) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
-
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new RuntimeException("Book not found"));
         if (!book.getSeller().getEmail().equals(userEmail)) {
             throw new RuntimeException("Not authorized to modify this listing");
         }
-
         // Sellers shouldn't directly set SOLD status through this, only ACTIVE or REMOVED
         if (newStatus == ListingStatus.SOLD) {
             throw new RuntimeException("Cannot manually mark a book as SOLD");
         }
-
         book.setStatus(newStatus);
         return bookRepository.save(book);
     }
@@ -254,17 +209,33 @@ public class BookService {
     public java.util.Map<String, java.math.BigDecimal> getSuggestedPriceRange(ConditionTier condition, java.math.BigDecimal mrp) {
         java.math.BigDecimal minPct = java.math.BigDecimal.ZERO;
         java.math.BigDecimal maxPct = java.math.BigDecimal.ZERO;
-
         switch (condition) {
-            case EXCELLENT -> { minPct = new java.math.BigDecimal("0.60"); maxPct = new java.math.BigDecimal("0.75"); }
-            case GOOD -> { minPct = new java.math.BigDecimal("0.40"); maxPct = new java.math.BigDecimal("0.60"); }
-            case FAIR -> { minPct = new java.math.BigDecimal("0.20"); maxPct = new java.math.BigDecimal("0.40"); }
-            case POOR -> { minPct = new java.math.BigDecimal("0.05"); maxPct = new java.math.BigDecimal("0.15"); }
+            case EXCELLENT -> {
+                minPct = new java.math.BigDecimal("0.60");
+                maxPct = new java.math.BigDecimal("0.75");
+            }
+            case GOOD -> {
+                minPct = new java.math.BigDecimal("0.40");
+                maxPct = new java.math.BigDecimal("0.60");
+            }
+            case FAIR -> {
+                minPct = new java.math.BigDecimal("0.20");
+                maxPct = new java.math.BigDecimal("0.40");
+            }
+            case POOR -> {
+                minPct = new java.math.BigDecimal("0.05");
+                maxPct = new java.math.BigDecimal("0.15");
+            }
         }
+        return java.util.Map.of("minPrice", mrp.multiply(minPct).setScale(2, java.math.RoundingMode.HALF_UP), "maxPrice", mrp.multiply(maxPct).setScale(2, java.math.RoundingMode.HALF_UP));
+    }
 
-        return java.util.Map.of(
-            "minPrice", mrp.multiply(minPct).setScale(2, java.math.RoundingMode.HALF_UP),
-            "maxPrice", mrp.multiply(maxPct).setScale(2, java.math.RoundingMode.HALF_UP)
-        );
+    public BookService(final BookRepository bookRepository, final BookImageRepository bookImageRepository, final CloudinaryService cloudinaryService, final UserRepository userRepository, final OrderRepository orderRepository, final PlatformTransactionManager transactionManager) {
+        this.bookRepository = bookRepository;
+        this.bookImageRepository = bookImageRepository;
+        this.cloudinaryService = cloudinaryService;
+        this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
+        this.transactionManager = transactionManager;
     }
 }

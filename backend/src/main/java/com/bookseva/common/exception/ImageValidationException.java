@@ -1,4 +1,6 @@
 package com.bookseva.common.exception;
+import com.bookseva.message.entity.Message;
+
 
 public class ImageValidationException extends RuntimeException {
     private final String field;

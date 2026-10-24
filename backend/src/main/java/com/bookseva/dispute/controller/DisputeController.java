@@ -1,20 +1,18 @@
 package com.bookseva.dispute.controller;
+import com.bookseva.dispute.entity.Dispute;
+
 
 import com.bookseva.dispute.dto.DisputeCreateRequest;
 import com.bookseva.dispute.service.DisputeService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
-@RequiredArgsConstructor
 public class DisputeController {
-
     private final DisputeService disputeService;
 
     @PostMapping("/orders/{orderId}/disputes")
@@ -27,5 +25,9 @@ public class DisputeController {
     public ResponseEntity<?> getMyDisputes(Authentication authentication) {
         var disputes = disputeService.getMyDisputes(authentication.getName());
         return ResponseEntity.ok(Map.of("success", true, "data", disputes));
+    }
+
+    public DisputeController(final DisputeService disputeService) {
+        this.disputeService = disputeService;
     }
 }

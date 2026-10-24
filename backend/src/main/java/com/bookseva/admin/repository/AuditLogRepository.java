@@ -1,6 +1,6 @@
 package com.bookseva.admin.repository;
 
-import com.bookseva.admin.AuditLog;
+import com.bookseva.admin.entity.AuditLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

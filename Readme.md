@@ -68,7 +68,7 @@ BookSeva was built to solve a specific problem: new textbooks are expensive for 
 | Layer | Technology |
 |---|---|
 | **Backend** | Java 17, Spring Boot 4, Spring Security (JWT), Spring Data JPA / Hibernate, Maven |
-| **Database** | MySQL |
+| **Database** | PostgreSQL |
 | **Frontend** | React 19 (Vite), Tailwind CSS 4, TanStack Query, React Router v7, React Hook Form + Zod |
 | **Payments** | Razorpay |
 | **Media Storage** | Cloudinary |
@@ -81,23 +81,18 @@ BookSeva was built to solve a specific problem: new textbooks are expensive for 
 A **modular monolith** — each domain is fully isolated at the package level (its own controller, service, repository, and entities), while still deploying and scaling as a single application. This gives clean separation of concerns without the operational overhead of distributed services at the current scale.
 
 ```
-backend/bookseva/
-├── auth/            Registration, login, OTP verification, JWT & refresh tokens
-├── user/            Profile management
-├── book/            Listings, condition tiers, suggested pricing
-├── search/          Filtering, sorting, pagination
-├── cart/            Cart items, availability checks
-├── order/           Checkout, lifecycle state machine, auto-confirm scheduler
-├── payment/         Razorpay integration (webhook + verification fallback)
-├── invoice/         PDF generation & retrieval
-├── notification/    In-app notifications + email dispatch
-├── review/          Post-transaction ratings
-├── message/         Listing-scoped buyer↔seller chat
-├── report/          User/listing flagging
-├── dispute/         Order-specific claims, resolution, trust score adjustment
-├── admin/           Moderation dashboard, platform settings, audit logging
-├── common/          Shared exception handling, base DTOs
-└── config/          Security, CORS, JWT filter chain, admin bootstrapping
+backend/src/main/java/com/bookseva/
+├── <feature>/       Feature modules (auth, user, book, order, etc.)
+│   ├── controller/  HTTP endpoints
+│   ├── dto/         Request and response types
+│   ├── entity/      Persistence entities and feature enums
+│   ├── repository/  Spring Data repositories
+│   ├── service/     Feature application logic
+│   └── specification/ Query specifications, where needed
+├── user/validation/ College-name validation and catalog
+├── bootstrap/      Startup seeders
+├── common/         Cross-feature exceptions and shared code
+└── config/         Framework and integration configuration
 
 frontend/src/
 ├── pages/           Home, BookDetails, CreateListing, EditListing, Cart,
@@ -128,11 +123,12 @@ The schema is organized around three logical clusters:
 - Java 17+
 - Maven
 - Node.js + npm
-- MySQL (running locally)
+- PostgreSQL (running locally)
 
 ### 1. Database
 ```sql
-CREATE DATABASE bookseva;
+-- Connect to the default `postgres` database first, then run:
+CREATE SCHEMA bookseva AUTHORIZATION postgres;
 ```
 
 ### 2. Backend
@@ -161,8 +157,8 @@ Runs on `http://localhost:5173`.
 ### Backend (`.env`)
 ```env
 # Database
-DB_URL=jdbc:mysql://localhost:3306/bookseva
-DB_USERNAME=
+DB_URL=jdbc:postgresql://localhost:5432/postgres?currentSchema=bookseva
+DB_USERNAME=postgres
 DB_PASSWORD=
 
 # JWT

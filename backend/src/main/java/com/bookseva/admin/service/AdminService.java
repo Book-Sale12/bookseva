@@ -1,16 +1,19 @@
 package com.bookseva.admin.service;
+import com.bookseva.message.entity.Message;
+import com.bookseva.notification.entity.Notification;
+import com.bookseva.user.entity.UserStatus;
 
-import com.bookseva.admin.PlatformSetting;
+
+import com.bookseva.admin.entity.PlatformSetting;
 import com.bookseva.admin.repository.PlatformSettingRepository;
-import com.bookseva.book.Book;
-import com.bookseva.book.BookRepository;
-import com.bookseva.book.ListingStatus;
+import com.bookseva.book.entity.Book;
+import com.bookseva.book.repository.BookRepository;
+import com.bookseva.book.entity.ListingStatus;
 import com.bookseva.notification.service.NotificationService;
-import com.bookseva.report.Report;
+import com.bookseva.report.entity.Report;
 import com.bookseva.report.repository.ReportRepository;
-import com.bookseva.user.User;
-import com.bookseva.user.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.bookseva.user.entity.User;
+import com.bookseva.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class AdminService {
 
     private final UserRepository userRepository;
@@ -30,7 +32,19 @@ public class AdminService {
     private final PlatformSettingRepository platformSettingRepository;
     private final NotificationService notificationService;
 
-    public Map<String, Object> getDashboardStats() {
+
+
+    public AdminService(UserRepository userRepository, BookRepository bookRepository, ReportRepository reportRepository,
+			PlatformSettingRepository platformSettingRepository, NotificationService notificationService) {
+		super();
+		this.userRepository = userRepository;
+		this.bookRepository = bookRepository;
+		this.reportRepository = reportRepository;
+		this.platformSettingRepository = platformSettingRepository;
+		this.notificationService = notificationService;
+	}
+
+	public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalUsers", userRepository.count());
         stats.put("activeListings", bookRepository.countByStatus(ListingStatus.ACTIVE));
@@ -47,7 +61,7 @@ public class AdminService {
     }
 
     @Transactional
-    public void updateUserStatus(Long id, com.bookseva.user.UserStatus newStatus) {
+    public void updateUserStatus(Long id, com.bookseva.user.entity.UserStatus newStatus) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         user.setStatus(newStatus);
         userRepository.save(user);

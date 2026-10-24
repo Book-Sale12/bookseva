@@ -12,8 +12,9 @@ build/
 .vite/
 
 # Env/Secrets
-.env
-.env.local
+**/.env
+**/.env.*
+!**/.env.example
 application-local.properties
 application-local.yml
 
@@ -28,3 +29,7 @@ test_cart.sh
 books.json
 
 .vscode/
+
+# Local IDE/workspace state
+**/.metadata/
+**/.sonarlint/
