@@ -7,15 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies and generated output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vite/
+
+# Local environment files (keep only the safe template)
+.env
+.env.*
+!.env.example
 *.local
 
 # Environment files
-.env
-.env.local
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
