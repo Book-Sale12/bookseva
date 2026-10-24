@@ -1,7 +1,7 @@
 package com.bookseva.cart.repository;
 
-import com.bookseva.cart.Cart;
-import com.bookseva.user.User;
+import com.bookseva.cart.entity.Cart;
+import com.bookseva.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

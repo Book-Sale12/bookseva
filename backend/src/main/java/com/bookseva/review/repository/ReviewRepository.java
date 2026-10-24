@@ -1,6 +1,6 @@
 package com.bookseva.review.repository;
 
-import com.bookseva.review.Review;
+import com.bookseva.review.entity.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByRevieweeIdOrderByCreatedAtDesc(Long revieweeId);
     Page<Review> findByRevieweeIdOrderByCreatedAtDesc(Long revieweeId, Pageable pageable);
-    
+
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.reviewee.id = :revieweeId")
     Double getAverageRatingByRevieweeId(@Param("revieweeId") Long revieweeId);
 

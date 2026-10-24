@@ -1,6 +1,8 @@
 package com.bookseva.auth.service;
+import com.bookseva.user.entity.Role;
 
-import com.bookseva.user.User;
+
+import com.bookseva.user.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

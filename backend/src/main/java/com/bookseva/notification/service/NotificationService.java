@@ -1,29 +1,21 @@
 package com.bookseva.notification.service;
+import com.bookseva.message.entity.Message;
 
-import com.bookseva.notification.Notification;
+
+import com.bookseva.notification.entity.Notification;
 import com.bookseva.notification.repository.NotificationRepository;
-import com.bookseva.user.User;
-import lombok.RequiredArgsConstructor;
+import com.bookseva.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class NotificationService {
-
     private final NotificationRepository notificationRepository;
 
     @Transactional
     public void sendNotification(User user, String type, String title, String message, String link) {
-        Notification notification = Notification.builder()
-                .user(user)
-                .type(type)
-                .title(title)
-                .message(message)
-                .link(link)
-                .build();
+        Notification notification = Notification.builder().user(user).type(type).title(title).message(message).link(link).build();
         notificationRepository.save(notification);
     }
 
@@ -39,14 +31,15 @@ public class NotificationService {
 
     @Transactional
     public void markAsRead(Long id, String email) {
-        Notification notification = notificationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
-        
+        Notification notification = notificationRepository.findById(id).orElseThrow(() -> new RuntimeException("Notification not found"));
         if (!notification.getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized");
         }
-        
         notification.setReadStatus(true);
         notificationRepository.save(notification);
+    }
+
+    public NotificationService(final NotificationRepository notificationRepository) {
+        this.notificationRepository = notificationRepository;
     }
 }

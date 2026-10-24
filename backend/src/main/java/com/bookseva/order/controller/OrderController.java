@@ -1,10 +1,11 @@
 package com.bookseva.order.controller;
+import com.bookseva.order.entity.Order;
+
 
 import com.bookseva.order.dto.CheckoutRequest;
 import com.bookseva.order.service.OrderService;
 import com.razorpay.RazorpayException;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,14 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@RequiredArgsConstructor
 public class OrderController {
-
     private final OrderService orderService;
 
     @PostMapping("/checkout")
@@ -53,12 +51,12 @@ public class OrderController {
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/{id}/status")
-    public ResponseEntity<?> updateOrderStatus(
-            @org.springframework.web.bind.annotation.PathVariable Long id,
-            @Valid @RequestBody com.bookseva.order.dto.OrderStatusUpdateRequest request,
-            Authentication authentication
-    ) {
+    public ResponseEntity<?> updateOrderStatus(@org.springframework.web.bind.annotation.PathVariable Long id, @Valid @RequestBody com.bookseva.order.dto.OrderStatusUpdateRequest request, Authentication authentication) {
         orderService.updateOrderStatus(id, request.getNewStatus(), authentication.getName());
         return ResponseEntity.ok(Map.of("success", true, "data", "Status updated successfully"));
+    }
+
+    public OrderController(final OrderService orderService) {
+        this.orderService = orderService;
     }
 }

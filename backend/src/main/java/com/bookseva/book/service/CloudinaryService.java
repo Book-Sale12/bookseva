@@ -1,20 +1,17 @@
 package com.bookseva.book.service;
+import com.bookseva.book.entity.Book;
+
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.Map;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class CloudinaryService {
-
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CloudinaryService.class);
     private final Cloudinary cloudinary;
 
     public String uploadImage(MultipartFile file) throws IOException {
@@ -42,5 +39,9 @@ public class CloudinaryService {
         String publicId = filename.contains(".") ? filename.substring(0, filename.lastIndexOf('.')) : filename;
         cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
         log.debug("Deleted Cloudinary image with publicId={}", publicId);
+    }
+
+    public CloudinaryService(final Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
     }
 }

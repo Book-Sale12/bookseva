@@ -1,4 +1,7 @@
 package com.bookseva.notification.service;
+import com.bookseva.message.entity.Message;
+import com.bookseva.notification.entity.Notification;
+
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

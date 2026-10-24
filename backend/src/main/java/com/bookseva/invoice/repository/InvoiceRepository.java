@@ -1,7 +1,7 @@
 package com.bookseva.invoice.repository;
 
-import com.bookseva.invoice.Invoice;
-import com.bookseva.order.Order;
+import com.bookseva.invoice.entity.Invoice;
+import com.bookseva.order.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

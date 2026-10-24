@@ -1,6 +1,8 @@
 package com.bookseva.dispute.repository;
+import com.bookseva.order.entity.Order;
 
-import com.bookseva.dispute.Dispute;
+
+import com.bookseva.dispute.entity.Dispute;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

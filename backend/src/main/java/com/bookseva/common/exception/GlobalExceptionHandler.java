@@ -1,4 +1,7 @@
 package com.bookseva.common.exception;
+import com.bookseva.message.entity.Message;
+import com.bookseva.user.entity.User;
+
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;

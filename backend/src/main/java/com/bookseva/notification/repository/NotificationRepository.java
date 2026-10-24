@@ -1,6 +1,6 @@
 package com.bookseva.notification.repository;
 
-import com.bookseva.notification.Notification;
+import com.bookseva.notification.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

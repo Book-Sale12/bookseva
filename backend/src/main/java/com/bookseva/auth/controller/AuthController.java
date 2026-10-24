@@ -1,4 +1,6 @@
 package com.bookseva.auth.controller;
+import com.bookseva.message.entity.Message;
+
 
 import com.bookseva.auth.dto.AuthResponse;
 import com.bookseva.auth.dto.LoginRequest;
@@ -8,7 +10,6 @@ import com.bookseva.auth.dto.ResendOtpRequest;
 import com.bookseva.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +23,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/register")
+    public AuthController(AuthService authService) {
+		super();
+		this.authService = authService;
+	}
+
+	@PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.ok(Map.of("success", true, "message", "Registration successful. OTP sent to email."));

@@ -1,18 +1,16 @@
 package com.bookseva.notification.controller;
+import com.bookseva.notification.entity.Notification;
+
 
 import com.bookseva.notification.service.NotificationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
-@RequiredArgsConstructor
 public class NotificationController {
-
     private final NotificationService notificationService;
 
     @GetMapping
@@ -31,5 +29,9 @@ public class NotificationController {
     public ResponseEntity<?> markAsRead(@PathVariable Long id, Authentication authentication) {
         notificationService.markAsRead(id, authentication.getName());
         return ResponseEntity.ok(Map.of("success", true, "data", "Notification marked as read"));
+    }
+
+    public NotificationController(final NotificationService notificationService) {
+        this.notificationService = notificationService;
     }
 }
