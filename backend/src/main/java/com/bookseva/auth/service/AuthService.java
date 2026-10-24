@@ -88,9 +88,16 @@ public class AuthService {
         }
         if (user.getStatus() != UserStatus.ACTIVE) {
             if (user.getStatus() == UserStatus.PENDING_VERIFICATION) {
-                // Optionally resend OTP
-                sendOtp(user, OtpPurpose.SIGNUP);
-                throw new UnverifiedAccountException("Account not verified. A new OTP has been sent to your email.");
+                // Route the user to verification even when signup's OTP was
+                // generated less than a minute ago and cannot yet be resent.
+                Optional<OtpVerification> recentOtp = otpRepository
+                        .findTopByUserAndPurposeOrderByCreatedAtDesc(user, OtpPurpose.SIGNUP);
+                boolean canResendOtp = recentOtp.isEmpty()
+                        || !recentOtp.get().getCreatedAt().plusMinutes(1).isAfter(LocalDateTime.now());
+                if (canResendOtp) {
+                    sendOtp(user, OtpPurpose.SIGNUP);
+                }
+                throw new UnverifiedAccountException("Account not verified. Check your email for the OTP.");
             }
             throw new RuntimeException("Account is " + user.getStatus());
         }

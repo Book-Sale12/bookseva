@@ -27,8 +27,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    // A login 401 is an authentication result (for example, an unverified
+    // account), not an expired access token. Let Login.jsx handle that response.
+    if (error.response?.status === 401 && originalRequest?.url?.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
     // If error is 401 and we haven't already retried this request
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
